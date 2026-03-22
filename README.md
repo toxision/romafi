@@ -1,4 +1,4 @@
-# romafi
+# somafmplayer
 Simple Rofi launcher to browse and play SomaFM radio stations using mpv
 
 <img width="413" height="565" alt="Screenshot_2026-03-20_09-25-12" src="https://github.com/user-attachments/assets/555f035e-e5a6-4b72-9c2b-e250c758fd1e" />
