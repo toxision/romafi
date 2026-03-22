@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+
+STATIONS="$HOME/.config/rofi/somastations.txt"
+
+MENU=$(
+  echo "⏹️  Stop any SomaFM stream"
+  echo "🎲 Play random station"
+  echo "🔄 Refresh station list"
+  cut -d'|' -f1 "$STATIONS"
+)
+
+choice=$(echo "$MENU" | rofi \
+  -dmenu \
+  -i \
+  -p "SomaFM" \
+  -theme $HOME/.config/rofi/somamenu.rasi
+)
+
+[ -z "$choice" ] && exit 0
+
+if [ "$choice" = "🔄 Refresh station list" ]; then
+  curl -s https://somafm.com/channels.json \
+  | jq -r '
+    .channels[] |
+    .title as $name |
+    .playlists[] |
+    select(.format=="mp3") |
+    "\($name)|\(.url)"
+  ' \
+  | while IFS="|" read -r name pls; do
+      stream=$(curl -s "$pls" | grep -m1 '^File1=' | cut -d= -f2)
+      echo "$name|$stream"
+    done > "$STATIONS"
+
+  notify-send "SomaFM" "Station list refreshed ✅"
+  exit 0
+fi
+
+if [ "$choice" = "⏹️  Stop any SomaFM stream" ]; then
+  pkill -f "mpv.*somafm\.com"
+  exit 0
+fi
+
+if [ "$choice" = "🎲 Play random station" ]; then
+  pkill -f "mpv.*somafm\.com"
+  shuf -n 1 ~/.config/rofi/somastations.txt \
+  | cut -d'|' -f2 \
+  | xargs mpv --no-video --cache=yes --cache-secs=30
+fi
+
+url=$(grep "^$choice|" "$STATIONS" | cut -d'|' -f2)
+
+pkill -f "mpv.*somafm\.com"
+
+mpv --no-video --cache=yes --cache-secs=30 "$url"
