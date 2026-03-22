@@ -42,10 +42,13 @@ if [ "$choice" = "⏹️  Stop any SomaFM stream" ]; then
 fi
 
 if [ "$choice" = "🎲 Play random station" ]; then
-  pkill -f "mpv.*somafm\.com"
-  shuf -n 1 ~/.config/rofi/somastations.txt \
-  | cut -d'|' -f2 \
-  | xargs mpv --no-video --cache=yes --cache-secs=30
+	pkill -f "mpv.*somafm\.com"
+	line=$(shuf -n 1 ~/.config/rofi/somastations.txt)
+	name=$(cut -d'|' -f1 <<< "$line")
+	url=$(cut -d'|' -f2 <<< "$line")
+	mpv --no-video --cache=yes --cache-secs=30 "$url" &
+	notify-send "SomaFM 🎧" "Playing: $name"
+	exit 0
 fi
 
 url=$(grep "^$choice|" "$STATIONS" | cut -d'|' -f2)
